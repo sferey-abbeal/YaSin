@@ -1,0 +1,25 @@
+language: php
+
+# Do not forget to provide your CODACY_PROJECT_TOKEN as described in https://docs.travis-ci.com/user/environment-variables/#Defining-Variables-in-Repository-Settings
+
+php:
+  - 7.3
+
+branches:
+  only:
+  - master
+  - develop
+
+# In case of timeouts and build failures you may want to prepend 'travis_retry' to the following commands:
+before_script:
+  - yes '' | pecl install imagick
+  - curl -s http://getcomposer.org/installer | php
+  - php composer.phar install -n
+  - openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:passphrase
+  - openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:passphrase
+
+script:
+  - php bin/phpunit --verbose --coverage-clover build/coverage/xml
+
+after_script:
+  - php bin/codacycoverage clover build/coverage/xml

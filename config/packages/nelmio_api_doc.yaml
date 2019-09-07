@@ -1,0 +1,132 @@
+#config/packages/nelmio_api_doc.yaml
+nelmio_api_doc:
+  models:
+    names:
+      - { alias: Activity, type: App\Entity\Activity }
+      - { alias: ActivityList, type: App\Entity\Activity, groups: [ActivityList] }
+      - { alias: ActivityDetails, type: App\Entity\Activity, groups: [ActivityDetails] }
+      - { alias: ActivityEdit, type: App\DTO\ActivityDTO, groups: [ActivityEdit] }
+      - { alias: ActivityCreate, type: App\DTO\ActivityDTO, groups: [ActivityCreate] }
+      - { alias: ActivityForFeedbackList, type: App\Entity\Activity, groups: [FeedbackList] }
+      - { alias: User, type: App\Entity\User }
+      - { alias: UserDetail, type: App\Entity\User, groups: [UserDetail] }
+      - { alias: UserList, type: App\Entity\User, groups: [UserList] }
+      - { alias: ActivityUserList, type: App\Entity\User, groups: [ActivityUser] }
+      - { alias: UserForFeedbackList, type: App\Entity\User, groups: [FeedbackList] }
+      - { alias: UserForActivityDetails, type: App\Entity\User, groups: [ActivityDetails] }
+      - { alias: UserForActivityCreate, type: App\Entity\User, groups: [ActivityCreate] }
+      - { alias: CommentList, type: App\Entity\Comment, groups: [Comment] }
+      - { alias: UserForComment, type: App\Entity\User, groups: [Comment] }
+      - { alias: UserForActivityEdit, type: App\Entity\User, groups: [ActivityEdit] }
+      - { alias: UserForActivityList, type: App\Entity\User, groups: [ActivityList] }
+      - { alias: UserCreate, type: App\DTO\UserDTO, groups: [UserCreate] }
+      - { alias: UserEdit, type: App\DTO\UserDTO, groups: [UserEdit] }
+      - { alias: UserPasswordEdit, type: App\DTO\UserDTO, groups: [PasswordEdit] }
+      - { alias: EditComment, type: App\DTO\CommentDTO, groups: [EditComment] }
+      - { alias: AddComment, type: App\DTO\CommentDTO, groups: [AddComment] }
+      - { alias: UserRole, type: App\DTO\UserDTO, groups: [UserRole] }
+      - { alias: Technology, type: App\Entity\Technology }
+      - { alias: TechnologyList, type: App\Entity\Technology, groups: [TechnologyList] }
+      - { alias: TechnologyForActivityDetails, type: App\Entity\Technology, groups: [ActivityDetails] }
+      - { alias: TechnologyForActivityCreate, type: App\DTO\TechnologyDTO, groups: [ActivityCreate] }
+      - { alias: TechnologyForActivityEdit, type: App\DTO\TechnologyDTO, groups: [ActivityEdit] }
+      - { alias: TechnologyForUserDetail, type: App\Entity\Technology, groups: [UserDetail] }
+      - { alias: TechnologyForUserEdit, type: App\DTO\TechnologyDTO, groups: [UserEdit] }
+      - { alias: TechnologyForUserList, type: App\Entity\Technology, groups: [UserList] }
+      - { alias: TechnologyForActivityUser, type: App\Entity\Technology, groups: [ActivityUser] }
+      - { alias: ActivityType, type: App\Entity\ActivityType }
+      - { alias: ActivityTypeList, type: App\Entity\ActivityType, groups: [ActivityTypeList] }
+      - { alias: ActivityTypeForActivityDetails, type: App\Entity\ActivityType, groups: [ActivityDetails] }
+      - { alias: ActivityTypeForActivityCreate, type: App\DTO\ActivityTypeDTO, groups: [ActivityCreate] }
+      - { alias: ActivityTypeForActivityEdit, type: App\DTO\ActivityTypeDTO, groups: [ActivityEdit] }
+      - { alias: Feedback, type: App\Entity\Feedback }
+      - { alias: FeedbackList, type: App\Entity\Feedback, groups: [FeedbackList] }
+      - { alias: FeedbackCreate, type: App\DTO\FeedbackDTO, groups: [AddFeedback] }
+      - { alias: FeedbackEdit, type: App\DTO\FeedbackDTO, groups: [EditFeedback] }
+      - { alias: UserTypeForActivityUserList, type: App\Entity\ActivityUser, groups: [ActivityUser] }
+      - { alias: ActivityUser, type: App\Entity\ActivityUser }
+  documentation:
+    definitions:
+      UserAvatar:
+        description: UserAvatar
+        type: object
+        properties:
+          original:
+            type: string
+            example: images/user/original/300.png
+          200x200:
+            type: string
+            example: images/user/200x200/300.png
+          40x40:
+            type: string
+            example: images/user/40x40/300.png
+      ActivityCover:
+        description: ActivityCover
+        type: object
+        properties:
+          original:
+            type: string
+            example: images/activity/original/300.png
+          150x150:
+            type: string
+            example: images/activity/150x150/300.png
+          40x40:
+            type: string
+            example: images/activity/40x40/300.png
+
+    #        schemes: [http, https]
+    info:
+      title: PentaBee API
+      description: PentaBee API Documentation
+      version: 1.0.0
+    securityDefinitions:
+      Bearer:
+        type: apiKey
+        description: 'Authorization: Bearer {jwt}'
+        name: Authorization
+        in: header
+    security:
+      - Bearer: []
+    paths:
+      /api/login:
+        post:
+          tags:
+            - Login\Register
+          summary: Login (No Auth required!)
+          description: Login (No Auth required!)
+          produces:
+            - application/json
+          parameters:
+            - name: requestBody
+              description: Json body for the request
+              in: body
+              required: true
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  password:
+                    type: string
+          responses:
+            '200':
+              description: Login successful
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+            '401':
+              description: Bad credentials
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: Bad credentials
+  areas: # to filter documented areas
+    path_patterns:
+      - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
