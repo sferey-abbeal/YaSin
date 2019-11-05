@@ -66,7 +66,6 @@ class UserRepository extends ServiceEntityRepository
     public function delete(User $user): void
     {
         $this->commentRepository->anonymizeUserComments($user);
-        $this->unassignProjectManager($user);
         $this->feedbackRepository->anonymizeUserFeedback($user);
         $em = $this->getEntityManager();
         $em->remove($user);
@@ -175,20 +174,5 @@ class UserRepository extends ServiceEntityRepository
             $queryBuilder->orderBy('user.seniority', $userListSort->seniority);
         }
         return $queryBuilder;
-    }
-
-    /**
-     * @param User $user
-     * @throws ORMException
-     * @throws OptimisticLockException
-     */
-    public function unassignProjectManager(User $user): void
-    {
-        $projectManagers = $this->findBy(array('projectManager' => $user));
-        foreach ($projectManagers as $projectManager) {
-            $projectManager->setProjectManager(null);
-        }
-        $em = $this->getEntityManager();
-        $em->flush();
     }
 }

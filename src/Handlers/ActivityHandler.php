@@ -2,7 +2,6 @@
 
 namespace App\Handlers;
 
-use App\Entity\User;
 use App\Filters\ActivityListFilter;
 use App\Filters\ActivityListPagination;
 use App\Filters\ActivityListSort;
@@ -42,11 +41,10 @@ class ActivityHandler
     public function getActivitiesListPaginated(
         ActivityListPagination $activityListPagination,
         ActivityListSort $activityListSort,
-        ActivityListFilter $activityListFilter,
-        User $user
+        ActivityListFilter $activityListFilter
     ): array {
         $paginatedResults = $this->activityRepository
-            ->getPaginatedActivities($activityListPagination, $activityListSort, $activityListFilter, $user);
+            ->getPaginatedActivities($activityListPagination, $activityListSort, $activityListFilter);
 
         $paginator = new Paginator($paginatedResults);
         $numResults = $paginator->count();

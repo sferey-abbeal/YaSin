@@ -4,7 +4,6 @@ namespace App\Repository;
 
 use App\Entity\Activity;
 use App\Entity\ActivityUser;
-use App\Entity\User;
 use App\Filters\ActivityListFilter;
 use App\Filters\ActivityListPagination;
 use App\Filters\ActivityListSort;
@@ -74,41 +73,16 @@ class ActivityRepository extends ServiceEntityRepository
 
     public function getAvailableActivities(
         ActivityListSort $activityListSort,
-        ActivityListFilter $activityListFilter,
-        User $user
+        ActivityListFilter $activityListFilter
     ): QueryBuilder
     {
         $queryBuilder = $this->createQueryBuilder('activity');
-        $isAdmin = $this->checker->isGranted('ROLE_ADMIN');
-        if ($isAdmin) {
             $queryBuilder
                 ->select('activity');
-        } else {
-            $queryBuilder
-                ->select('DISTINCT activity')
-                ->leftJoin('activity.activityUsers', 'activityUsers')
-                ->where($queryBuilder->expr()->orX(
-                    $queryBuilder->expr()->andX(
-                        $queryBuilder->expr()->eq('activity.public', 1),
-                        $queryBuilder->expr()->neq('activity.status', ':rejected'),
-                        $queryBuilder->expr()->neq('activity.status', ':need_validation')
-                    ),
-                    $queryBuilder->expr()->eq('activity.owner', ':user'),
-                    $queryBuilder->expr()->eq('activityUsers.user', ':user')
-                ))
-                ->setParameter(':rejected', Activity::STATUS_REJECTED)
-                ->setParameter(':need_validation', Activity::STATUS_IN_VALIDATION)
-                ->setParameter(':user', $user);
-        }
 
         if ($activityListFilter->name !== null) {
             $queryBuilder->andWhere('activity.name LIKE :nameFilter')
                 ->setParameter('nameFilter', $activityListFilter->name . '%');
-        }
-
-        if ($activityListFilter->status !== null) {
-            $queryBuilder->andWhere('activity.status = :statusFilter')
-                ->setParameter('statusFilter', $activityListFilter->status);
         }
 
         if ($activityListFilter->owner !== null) {
@@ -120,11 +94,6 @@ class ActivityRepository extends ServiceEntityRepository
             $queryBuilder->join('activity.technologies', 'technology')
                 ->andWhere('technology IN (:technologyFilter)')
                 ->setParameter('technologyFilter', $activityListFilter->technology);
-        }
-        if ($activityListFilter->activityType !== null) {
-            $queryBuilder->join('activity.types', 'activityType')
-                ->andWhere('activityType IN (:activityTypeFilter)')
-                ->setParameter('activityTypeFilter', $activityListFilter->activityType);
         }
         if ($activityListFilter->assignedUser !== null) {
             $queryBuilder->leftJoin('activity.activityUsers', 'activityUsersAssigned')
@@ -139,9 +108,6 @@ class ActivityRepository extends ServiceEntityRepository
         if ($activityListSort->createdAt !== null) {
             $queryBuilder->orderBy('activity.createdAt', $activityListSort->createdAt);
         }
-        if ($activityListSort->finalDeadline !== null) {
-            $queryBuilder->orderBy('activity.finalDeadline', $activityListSort->finalDeadline);
-        }
 
         return $queryBuilder;
     }
@@ -149,11 +115,10 @@ class ActivityRepository extends ServiceEntityRepository
     public function getPaginatedActivities(
         ActivityListPagination $activityListPagination,
         ActivityListSort $activityListSort,
-        ActivityListFilter $activityListFilter,
-        User $user
+        ActivityListFilter $activityListFilter
     ): Query
     {
-        $queryBuilder = $this->getAvailableActivities($activityListSort, $activityListFilter, $user);
+        $queryBuilder = $this->getAvailableActivities($activityListSort, $activityListFilter);
         if ($activityListPagination->pageSize === -1) {
             return $queryBuilder->getQuery();
         }
@@ -167,25 +132,5 @@ class ActivityRepository extends ServiceEntityRepository
             ->getQuery();
 
         return $query;
-    }
-
-    public function getActivitiesForValidation(
-        User $user
-    ): QueryBuilder
-    {
-        $queryBuilder = $this->createQueryBuilder('activity');
-        $queryBuilder
-            ->select('activity')
-            ->join('activity.owner', 'user')
-            ->where('activity.status = :in_validation')
-            ->setParameter(':in_validation', Activity::STATUS_IN_VALIDATION);
-        $isAdmin = $this->checker->isGranted('ROLE_ADMIN');
-        if (!$isAdmin) {
-            $queryBuilder
-                ->andWhere('user.projectManager = :project_manager')
-                ->setParameter(':project_manager', $user);
-        }
-
-        return $queryBuilder;
     }
 }

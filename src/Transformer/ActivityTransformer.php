@@ -8,14 +8,12 @@ use App\DTO\ActivityDTO;
 use App\Entity\Activity;
 use App\Entity\Image;
 use App\Entity\Technology;
-use App\Entity\ActivityType;
 use App\Entity\User;
 use App\Exceptions\EntityNotFound;
 use App\Exceptions\NotValidFileType;
 use App\Repository\ActivityRepository;
 use App\Repository\ImageRepository;
 use App\Repository\TechnologyRepository;
-use App\Repository\ActivityTypeRepository;
 use App\Service\ActivityCoverManager;
 use App\Service\ImageManager;
 use Doctrine\ORM\OptimisticLockException;
@@ -29,10 +27,6 @@ class ActivityTransformer
      * @var TechnologyRepository
      */
     private $techRepo;
-    /**
-     * @var ActivityTypeRepository
-     */
-    private $typeRepo;
     /**
      * @var ActivityRepository
      */
@@ -52,14 +46,12 @@ class ActivityTransformer
 
     public function __construct(
         TechnologyRepository $techRepo,
-        ActivityTypeRepository $typeRepo,
         ActivityRepository $activityRepository,
         ImageRepository $imageRepository,
         ActivityCoverManager $activityCoverManager,
         AuthorizationCheckerInterface $checker
     ) {
         $this->techRepo = $techRepo;
-        $this->typeRepo = $typeRepo;
         $this->activityRepository = $activityRepository;
         $this->imageRepository = $imageRepository;
         $this->activityCoverManager = $activityCoverManager;
@@ -92,42 +84,6 @@ class ActivityTransformer
 
     /**
      * @param ActivityDTO $dto
-     * @param Activity $entity
-     * @throws EntityNotFound
-     */
-    private function addTypes(ActivityDTO $dto, Activity $entity): void
-    {
-        /** @var ActivityType $activityType */
-        foreach ($dto->types as $activityType) {
-            $activityTypeID = $activityType->id;
-            $activityTypeToAdd = $this->typeRepo->find($activityTypeID);
-            if (!$activityTypeToAdd) {
-                $entityNotFound = new EntityNotFound(
-                    ActivityType::class,
-                    $activityTypeID,
-                    'No activity type found.'
-                );
-                throw $entityNotFound;
-            }
-            $entity->addType($activityTypeToAdd);
-        }
-    }
-
-    /**
-     * @param Activity $entity
-     */
-    private function resetTechTypeCollections(Activity $entity): void
-    {
-        foreach ($entity->getTechnologies() as $techToRemove) {
-            $entity->removeTechnology($techToRemove);
-        }
-        foreach ($entity->getTypes() as $typeToRemove) {
-            $entity->removeType($typeToRemove);
-        }
-    }
-
-    /**
-     * @param ActivityDTO $dto
      * @param User $owner
      * @return Activity
      * @throws EntityNotFound
@@ -140,13 +96,9 @@ class ActivityTransformer
         $entity = new Activity();
         $entity->setName($dto->name);
         $entity->setDescription($dto->description);
-        $entity->setApplicationDeadline($dto->applicationDeadline);
-        $entity->setFinalDeadline($dto->finalDeadline);
         $entity->setPublic($dto->public);
         $entity->setOwner($owner);
-
         $this->addTechnologies($dto, $entity);
-        $this->addTypes($dto, $entity);
 
         return $entity;
     }
@@ -164,22 +116,12 @@ class ActivityTransformer
         ActivityDTO $dto,
         Activity $activity
     ): Activity {
-
-        $this->resetTechTypeCollections($activity);
-
         $activity->setName($dto->name);
         $activity->setDescription($dto->description);
-        $activity->setApplicationDeadline($dto->applicationDeadline);
-        $activity->setFinalDeadline($dto->finalDeadline);
-        $isAdmin = $this->checker->isGranted('ROLE_ADMIN');
-        if ($isAdmin || $activity->getStatus() !== (Activity::STATUS_IN_VALIDATION || Activity::STATUS_REJECTED)) {
-            $activity->setStatus($dto->status);
-        }
 
         $activity->setPublic($dto->public);
 
         $this->addTechnologies($dto, $activity);
-        $this->addTypes($dto, $activity);
 
         if (!empty($dto->cover)) {
             $activityCover = new UploadedBase64EncodedFile(new Base64EncodedFile($dto->cover));

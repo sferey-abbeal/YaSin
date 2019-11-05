@@ -61,8 +61,7 @@ class UserFixtures extends Fixture
         $user->setEmail('pm@pentalog.com');
         $user->setBiography($faker->sentence);
         $user->setStars(0);
-        $user->setRoles((array)'ROLE_PM');
-        $this->setReference('projectManager', $user);
+        $user->setRoles((array)'ROLE_USER');
         $manager->persist($user);
 
         $user = new User();
@@ -77,10 +76,6 @@ class UserFixtures extends Fixture
         $user->setBiography($faker->sentence);
         $user->setStars(0);
         $user->setRoles((array)'ROLE_USER');
-
-        /** @var User $projectManager */
-        $projectManager = $this->getReference('projectManager');
-        $user->setProjectManager($projectManager);
         $manager->persist($user);
 
         for ($i = 0; $i < 10; $i++) {
