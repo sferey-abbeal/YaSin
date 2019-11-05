@@ -15,10 +15,6 @@ use Symfony\Component\Validator\Context\ExecutionContext;
  */
 class UserDTO
 {
-    public const SENIORITY_JUNIOR = 0;
-    public const SENIORITY_MIDDLE = 1;
-    public const SENIORITY_SENIOR = 2;
-
     /**
      * User ID
      * @var integer
@@ -108,25 +104,7 @@ class UserDTO
     public $email;
 
     /**
-     * @var string
-     * @Serializer\Type("string")
-     * @Serializer\Expose()
-     * @Groups({"UserEdit"})
-     */
-    public $position;
-
-    /**
-     * User seniority (JUNIOR, MIDDLE, SENIOR int(0-2) )
-     * @var integer
-     * @Serializer\Type("integer")
-     * @Serializer\Expose()
-     * @Groups({"UserEdit"})
-     * @SWG\Property()
-     */
-    public $seniority = self::SENIORITY_JUNIOR;
-
-    /**
-     * User location (CHI, NYC, BOS, FRA, PAR, ORL, BUC, BRA, CLU, IAS, HAN, GUA, LYO)
+     * User location
      * @var string
      * @Serializer\Type("string")
      * @Serializer\Expose()
@@ -196,20 +174,6 @@ class UserDTO
      * @SWG\Property()
      */
     public $roles;
-
-    /**
-     * @param ExecutionContext $context
-     * @Assert\Callback(groups={"UserEdit"})
-     */
-    public function isLocationValid(ExecutionContext $context): void
-    {
-        if (!in_array($this->location, User::LOCATION, true)) {
-            $context
-                ->buildViolation('Please enter a valid location!')
-                ->atPath('location')
-                ->addViolation();
-        }
-    }
 
     /**
      * @param ExecutionContext $context

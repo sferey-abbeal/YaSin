@@ -19,22 +19,6 @@ use Swagger\Annotations as SWG;
  */
 class User implements UserInterface
 {
-    public const SENIORITY_JUNIOR = 0;
-    public const SENIORITY_MIDDLE = 1;
-    public const SENIORITY_SENIOR = 2;
-    public const LOCATION_CHISINAU = 'CHI';
-    public const LOCATION_NEW_YORK = 'NYC';
-    public const LOCATION_BOSTON = 'BOS';
-    public const LOCATION_FRANKFURT = 'FRA';
-    public const LOCATION_PARIS = 'PAR';
-    public const LOCATION_ORLEANS = 'ORL';
-    public const LOCATION_BUCHAREST = 'BUC';
-    public const LOCATION_BRASOV = 'BRA';
-    public const LOCATION_CLUJ = 'CLU';
-    public const LOCATION_IASI = 'IAS';
-    public const LOCATION_HANOI = 'HAN';
-    public const LOCATION_GUADALAJARA = 'GUA';
-    public const LOCATION_LYON = 'LYO';
     public const ROLE_ADMIN = 'ROLE_ADMIN';
     public const ROLE_USER = 'ROLE_USER';
 
@@ -43,21 +27,6 @@ class User implements UserInterface
         self::ROLE_ADMIN
     ];
 
-    public const LOCATION = [
-        self::LOCATION_CHISINAU,
-        self::LOCATION_NEW_YORK,
-        self::LOCATION_BOSTON,
-        self::LOCATION_FRANKFURT,
-        self::LOCATION_PARIS,
-        self::LOCATION_ORLEANS,
-        self::LOCATION_BUCHAREST,
-        self::LOCATION_BRASOV,
-        self::LOCATION_CLUJ,
-        self::LOCATION_IASI,
-        self::LOCATION_HANOI,
-        self::LOCATION_GUADALAJARA,
-        self::LOCATION_LYON
-    ];
     /**
      * User ID
      * @ORM\Id()
@@ -107,25 +76,7 @@ class User implements UserInterface
     protected $email;
 
     /**
-     * User position
-     * @ORM\Column(type="string", nullable=true)
-     * @Serializer\Expose()
-     * @Groups({"UserDetail", "UserList", "ActivityUser"})
-     * @SWG\Property()
-     */
-    private $position;
-
-    /**
-     * User seniority (JUNIOR, MIDDLE, SENIOR int(0-2) )
-     * @ORM\Column(type="integer", nullable=true)
-     * @Serializer\Expose()
-     * @Groups({"UserDetail", "UserList", "ActivityUser"})
-     * @SWG\Property()
-     */
-    private $seniority = self::SENIORITY_JUNIOR;
-
-    /**
-     * User location (CHI, NYC, BOS, FRA, PAR, ORL, BUC, BRA, CLU, IAS, HAN, GUA, LYO)
+     * User location
      * @ORM\Column(type="string", nullable=true)
      * @Serializer\Expose()
      * @Groups({"UserDetail", "UserList", "ActivityUser"})
@@ -314,26 +265,6 @@ class User implements UserInterface
     {
         $this->password = $password;
         $this->passwordChangedAt = new DateTime();
-    }
-
-    public function getPosition(): ?string
-    {
-        return $this->position;
-    }
-
-    public function setPosition(string $position): void
-    {
-        $this->position = $position;
-    }
-
-    public function getSeniority(): ?string
-    {
-        return $this->seniority;
-    }
-
-    public function setSeniority(string $seniority): void
-    {
-        $this->seniority = $seniority;
     }
 
     public function getLocation(): ?string

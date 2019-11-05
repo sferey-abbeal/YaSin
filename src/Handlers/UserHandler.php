@@ -5,7 +5,6 @@ namespace App\Handlers;
 use App\Filters\PaginatorValidator;
 use App\Filters\UserListFilter;
 use App\Filters\UserListPagination;
-use App\Filters\UserListSort;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use JMS\Serializer\SerializationContext;
@@ -40,12 +39,11 @@ class UserHandler
 
     public function getUserListPaginated(
         UserListPagination $userListPagination,
-        UserListSort $userListSort,
         UserListFilter $userListFilter
     ): array {
 
         $paginatedResults = $this->userRepository
-            ->getPaginatedUserList($userListPagination, $userListSort, $userListFilter);
+            ->getPaginatedUserList($userListPagination, $userListFilter);
 
         $paginator = new Paginator($paginatedResults);
         $numResults = $paginator->count();

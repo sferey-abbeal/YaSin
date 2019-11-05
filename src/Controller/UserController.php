@@ -10,7 +10,6 @@ use App\Exceptions\NotValidFileType;
 use App\Exceptions\NotValidOldPassword;
 use App\Filters\UserListFilter;
 use App\Filters\UserListPagination;
-use App\Filters\UserListSort;
 use App\Handlers\UserHandler;
 use App\Repository\ImageRepository;
 use App\Repository\UserRepository;
@@ -506,15 +505,11 @@ class UserController extends AbstractController
     public function getUserList(
         Request $request,
         UserListFilter $userListFilter,
-        UserListSort $userListSort,
         UserListPagination $userListPagination
     ): JsonResponse {
 
         $filter = $request->query->get('filter');
         $userListFilter->setFilterFields((array)$filter);
-
-        $sorting = $request->query->get('sortBy');
-        $userListSort->setSortingFields((array)$sorting);
 
         $pagination = $request->query->get('pagination');
         $userListPagination->setPaginationFields((array)$pagination);
@@ -523,7 +518,6 @@ class UserController extends AbstractController
             json_encode($this->userHandler
                 ->getUserListPaginated(
                     $userListPagination,
-                    $userListSort,
                     $userListFilter
                 )),
             200,

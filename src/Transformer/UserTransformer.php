@@ -114,8 +114,6 @@ class UserTransformer
 
         $user->setName($dto->name);
         $user->setSurname($dto->surname);
-        $user->setPosition($dto->position);
-        $user->setSeniority($dto->seniority);
         $user->setLocation($dto->location);
         $user->setBiography($dto->biography);
         if ($dto->technologies !== null) {

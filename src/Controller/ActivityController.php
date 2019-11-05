@@ -13,7 +13,6 @@ use App\Filters\ActivityListPagination;
 use App\Filters\ActivityListSort;
 use App\Filters\UserListFilter;
 use App\Filters\UserListPagination;
-use App\Filters\UserListSort;
 use App\Handlers\ActivityHandler;
 use App\Handlers\UsersForActivityHandler;
 use App\Repository\ActivityUserRepository;
@@ -1391,7 +1390,6 @@ class ActivityController extends AbstractController
      * @param Activity $activity
      * @param Request $request
      * @param UserListFilter $userListFilter
-     * @param UserListSort $userListSort
      * @param UserListPagination $userListPagination
      * @return JsonResponse
      */
@@ -1399,14 +1397,10 @@ class ActivityController extends AbstractController
         Activity $activity,
         Request $request,
         UserListFilter $userListFilter,
-        UserListSort $userListSort,
         UserListPagination $userListPagination
     ): JsonResponse {
         $filter = $request->query->get('filter');
         $userListFilter->setFilterFields((array)$filter);
-
-        $sorting = $request->query->get('sortBy');
-        $userListSort->setSortingFields((array)$sorting);
 
         $pagination = $request->query->get('pagination');
         $userListPagination->setPaginationFields((array)$pagination);
@@ -1414,7 +1408,6 @@ class ActivityController extends AbstractController
             json_encode($this->usersForActivityHandler
                 ->getUsersForActivityListPaginated(
                     $userListPagination,
-                    $userListSort,
                     $userListFilter,
                     $activity
                 )),

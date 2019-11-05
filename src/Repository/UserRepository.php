@@ -7,7 +7,6 @@ use App\Entity\ActivityUser;
 use App\Entity\User;
 use App\Filters\UserListFilter;
 use App\Filters\UserListPagination;
-use App\Filters\UserListSort;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
@@ -88,12 +87,10 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * @param UserListFilter $userListFilter
-     * @param UserListSort $userListSort
      * @return QueryBuilder
      */
     public function getUserList(
-        UserListFilter $userListFilter,
-        UserListSort $userListSort
+        UserListFilter $userListFilter
     ): QueryBuilder
     {
         $queryBuilder = $this->createQueryBuilder('user');
@@ -104,19 +101,15 @@ class UserRepository extends ServiceEntityRepository
                 ->andWhere('technology IN (:technologyFilter)')
                 ->setParameter('technologyFilter', $userListFilter->technology);
         }
-        if ($userListSort->seniority !== null) {
-            $queryBuilder->orderBy('user.seniority', $userListSort->seniority);
-        }
         return $queryBuilder;
     }
 
     public function getPaginatedUserList(
         UserListPagination $userListPagination,
-        UserListSort $userListSort,
         UserListFilter $userListFilter
     ): Query
     {
-        $queryBuilder = $this->getUserList($userListFilter, $userListSort);
+        $queryBuilder = $this->getUserList($userListFilter);
         if ($userListPagination->pageSize === -1) {
             return $queryBuilder->getQuery();
         }
@@ -133,12 +126,11 @@ class UserRepository extends ServiceEntityRepository
 
     public function getUsersForActivityListPaginated(
         UserListPagination $userListPagination,
-        UserListSort $userListSort,
         UserListFilter $userListFilter,
         Activity $activity
     ): Query
     {
-        $queryBuilder = $this->getUsersForActivity($userListFilter, $userListSort, $activity);
+        $queryBuilder = $this->getUsersForActivity($userListFilter, $activity);
         if ($userListPagination->pageSize === -1) {
             return $queryBuilder->getQuery();
         }
@@ -155,7 +147,6 @@ class UserRepository extends ServiceEntityRepository
 
     public function getUsersForActivity(
         UserListFilter $userListFilter,
-        UserListSort $userListSort,
         Activity $activity
     ): QueryBuilder
     {
@@ -169,9 +160,6 @@ class UserRepository extends ServiceEntityRepository
             $queryBuilder
                 ->andWhere('activityUsers.type IN (:activityRoleFilter)')
                 ->setParameter('activityRoleFilter', $userListFilter->activityRole);
-        }
-        if ($userListSort->seniority !== null) {
-            $queryBuilder->orderBy('user.seniority', $userListSort->seniority);
         }
         return $queryBuilder;
     }
