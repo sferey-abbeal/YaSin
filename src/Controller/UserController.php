@@ -29,8 +29,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use FOS\RestBundle\Controller\Annotations as Rest;
-use Symfony\Component\Security\Core\Role\Role;
-use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Swagger\Annotations as SWG;
 
@@ -57,23 +55,17 @@ class UserController extends AbstractController
      * @var UserHandler
      */
     private $userHandler;
-    /**
-     * @var RoleHierarchyInterface
-     */
-    private $roleHierarchy;
 
     public function __construct(
         SerializerInterface $serializer,
         UserTransformer $transformer,
         ValidatorInterface $validator,
-        UserHandler $userHandler,
-        RoleHierarchyInterface $roleHierarchy
+        UserHandler $userHandler
     ) {
         $this->serializer = $serializer;
         $this->transformer = $transformer;
         $this->validator = $validator;
         $this->userHandler = $userHandler;
-        $this->roleHierarchy = $roleHierarchy;
     }
 
     /**
@@ -617,237 +609,5 @@ class UserController extends AbstractController
             $imageRepository->delete($image);
         }
         return new JsonResponse(['message' => 'Avatar successfully deleted!'], Response::HTTP_OK);
-    }
-
-    /**
-     * Set role
-     * @Rest\Post("/{id}/set-role", requirements={"id"="\d+"})
-     * @SWG\Post(
-     *     tags={"User"},
-     *     summary="Set role.",
-     *     description="Set role.",
-     *     operationId="setRole",
-     *     produces={"application/json"},
-     *     @SWG\Parameter(
-     *     description="ID of User to set role",
-     *     in="path",
-     *     name="id",
-     *     required=true,
-     *     type="integer",
-     *     ),
-     *     @SWG\Parameter(
-     *     description="Json body for the request",
-     *     name="requestBody",
-     *     required=true,
-     *     in="body",
-     *     @Model(type=UserDTO::class, groups={"UserRole"}),
-     * )
-     * )
-     * @SWG\Response(
-     *     response=401,
-     *     description="Unauthorized.",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=401),
-     *     @SWG\Property(property="message", type="string", example="JWT Token not found"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="200",
-     *     description="Successfull operation!",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="message", type="string", example="Role successfully set up!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=403),
-     *     @SWG\Property(property="message", type="string", example="Access denied!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Not found",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=404),
-     *     @SWG\Property(property="message", type="string", example="Not found!"),
-     *     )
-     * )
-     * @param User $user
-     * @param UserRepository $userRepository
-     * @param Request $request
-     * @param ValidationErrorSerializer $validationErrorSerializer
-     * @return JsonResponse
-     * @throws ORMException
-     * @throws OptimisticLockException
-     */
-    public function setRole(
-        User $user,
-        UserRepository $userRepository,
-        Request $request,
-        ValidationErrorSerializer $validationErrorSerializer
-    ): JsonResponse {
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
-        if (!$isAdmin) {
-            return new JsonResponse([
-                'code' => Response::HTTP_FORBIDDEN,
-                'message' => 'Access denied!'
-            ], Response::HTTP_FORBIDDEN);
-        }
-        $data = $request->getContent();
-        /** @var DeserializationContext $context */
-        $context = DeserializationContext::create()->setGroups(array('UserRole'));
-
-        $userDTO = $this->serializer->deserialize(
-            $data,
-            UserDTO::class,
-            'json',
-            $context
-        );
-        $errors = $this->validator->validate($userDTO, null, ['UserRole']);
-        if (count($errors) > 0) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_BAD_REQUEST,
-                    'message' => 'Bad Request',
-                    'errors' => $validationErrorSerializer->serialize($errors)
-                ],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-        $user->setRoles($userDTO->roles);
-        $userRepository->save($user);
-        return new JsonResponse(['message' => 'Role successfully set up!'], Response::HTTP_OK);
-    }
-
-    /**
-     * Set Project Manager
-     * @Rest\Post("/{id}/assign-project-manager", requirements={"id"="\d+"})
-     * @SWG\Post(
-     *     tags={"User"},
-     *     summary="Set Project Manager for user.",
-     *     description="Set Project Manager for user.",
-     *     operationId="setProjectManager",
-     *     produces={"application/json"},
-     *     @SWG\Parameter(
-     *     description="ID of User",
-     *     in="path",
-     *     name="id",
-     *     required=true,
-     *     type="integer",
-     *     ),
-     *     @SWG\Parameter(
-     *     description="Json body for the request",
-     *     name="requestBody",
-     *     required=true,
-     *     in="body",
-     *     @Model(type=User::class, groups={"SetRole"}),
-     * )
-     * )
-     * @SWG\Response(
-     *     response=401,
-     *     description="Unauthorized.",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=401),
-     *     @SWG\Property(property="message", type="string", example="JWT Token not found"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="200",
-     *     description="Successfull operation!",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="message", type="string", example="Project Manager successfully set up!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=403),
-     *     @SWG\Property(property="message", type="string", example="Access denied!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Not found",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=404),
-     *     @SWG\Property(property="message", type="string", example="Project Manager to assign not found!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="400",
-     *     description="This user in not a PM!",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=400),
-     *     @SWG\Property(
-     *     property="message",
-     *     type="string",
-     *     example="This user cannot be assigned as a Project Manager!"),
-     *     )
-     * )
-     * @param User $user
-     * @param UserRepository $userRepository
-     * @param Request $request
-     * @return JsonResponse
-     * @throws ORMException
-     * @throws OptimisticLockException
-     */
-    public function setProjectManagerForUser(
-        User $user,
-        UserRepository $userRepository,
-        Request $request
-    ): JsonResponse {
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
-        if (!$isAdmin) {
-            return new JsonResponse([
-                'code' => Response::HTTP_FORBIDDEN,
-                'message' => 'Access denied!'
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        $data = $request->getContent();
-        /** @var DeserializationContext $context */
-        $context = DeserializationContext::create()->setGroups(array('SetPM'));
-
-        $id = $this->serializer->deserialize(
-            $data,
-            User::class,
-            'json',
-            $context
-        );
-        $projectManager = $userRepository->find($id);
-        if (!$projectManager) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_NOT_FOUND,
-                    'message' => 'Project Manager to assign not found!'
-                ],
-                Response::HTTP_NOT_FOUND
-            );
-        }
-        $userHasRole = false;
-        foreach ($projectManager->getRoles() as $userRole) {
-            $roleHierarchy = $this->roleHierarchy->getReachableRoles([new Role($userRole)]);
-            foreach ($roleHierarchy as $role) {
-                if ($role->getRole() === 'ROLE_PM') {
-                    $userHasRole = true;
-                }
-            }
-        }
-
-        if (!$userHasRole) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_BAD_REQUEST,
-                    'message' => 'This user cannot be assigned as a Project Manager!'
-                ],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-        $user->setProjectManager($projectManager);
-        $userRepository->save($user);
-        return new JsonResponse(['message' => 'Project Manager successfully set up!'], Response::HTTP_OK);
     }
 }

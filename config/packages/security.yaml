@@ -4,8 +4,7 @@ security:
       algorithm: bcrypt
       cost: 12
   role_hierarchy:
-    ROLE_ADMIN:       [ROLE_USER, ROLE_PM]
-    ROLE_PM:          ROLE_USER
+    ROLE_ADMIN:       ROLE_USER
   providers:
     users:
       entity:

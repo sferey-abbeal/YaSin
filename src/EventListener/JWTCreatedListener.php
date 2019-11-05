@@ -16,6 +16,7 @@ class JWTCreatedListener
         /** @var User $user */
         $user = $event->getUser();
         $payload['id'] = $user->getId();
+        $payload['mercure'] = array("publish" => array('*'));
         $event->setData($payload);
     }
 }
