@@ -18,12 +18,6 @@ use Swagger\Annotations as SWG;
  */
 class Activity
 {
-    public const STATUS_IN_VALIDATION = 1;
-    public const STATUS_NEW = 2;
-    public const STATUS_FINISHED = 3;
-    public const STATUS_CLOSED = 4;
-    public const STATUS_REJECTED = 5;
-
     /**
      * Activity ID
      * @ORM\Id()
@@ -52,36 +46,6 @@ class Activity
      * @SWG\Property()
      */
     private $description;
-
-    /**
-     * The deadline for applying ao Activity
-     * @ORM\Column(type="datetime")
-     * @Serializer\Expose()
-     * @Serializer\Type("DateTime<'U'>")
-     * @Groups({"ActivityDetails", "ActivityCreate", "ActivityEdit"})
-     * @SWG\Property(example="1555555599")
-     */
-    private $applicationDeadline;
-
-    /**
-     * The final deadline of Activity
-     * @ORM\Column(type="datetime")
-     * @Serializer\Expose()
-     * @Serializer\Type("DateTime<'U'>")
-     * @Groups({"ActivityDetails", "ActivityCreate", "ActivityEdit"})
-     * @SWG\Property(example="15555555599")
-     */
-    private $finalDeadline;
-
-    /**
-     * Activity status (IN_VALIDATION, NEW, FINISHED, CLOSED, REJECTED int(1-5))
-     * @ORM\Column(type="integer")
-     * @Serializer\Expose()
-     * @Groups({"ActivityList", "ActivityDetails", "ActivityEdit"})
-     * @SWG\Property()
-     */
-    private $status = self::STATUS_IN_VALIDATION;
-
     /**
      * Activity owner (User)
      * @ORM\ManyToOne(targetEntity="User")
@@ -121,17 +85,6 @@ class Activity
     protected $technologies;
 
     /**
-     * Activity types (Type Collection)
-     * @var Collection|ActivityType[]
-     * @ORM\ManyToMany(targetEntity="ActivityType")
-     * @ORM\JoinTable(name="activity_to_activity_type")
-     * @Serializer\Expose()
-     * @Groups({"ActivityDetails", "ActivityCreate", "ActivityEdit"})
-     * @SWG\Property()
-     */
-    protected $types;
-
-    /**
      * Activity privacy (true=public, false=private)
      * @ORM\Column(type="boolean")
      * @Serializer\Expose()
@@ -158,7 +111,6 @@ class Activity
     public function __construct()
     {
         $this->technologies = new ArrayCollection();
-        $this->types = new ArrayCollection();
         $this->createdAt = new DateTime();
         $this->updatedAt = new DateTime();
         $this->activityUsers = new ArrayCollection();
@@ -170,14 +122,6 @@ class Activity
     public function getTechnologies(): ?iterable
     {
         return $this->technologies;
-    }
-
-    /**
-     * @return ActivityType[]
-     */
-    public function getTypes(): ?iterable
-    {
-        return $this->types;
     }
 
     /**
@@ -200,28 +144,6 @@ class Activity
             return;
         }
         $this->technologies->removeElement($technology);
-    }
-
-    /**
-     * @param ActivityType $type
-     */
-    public function addType(ActivityType $type): void
-    {
-        if ($this->types->contains($type)) {
-            return;
-        }
-        $this->types->add($type);
-    }
-
-    /**
-     * @param ActivityType $type
-     */
-    public function removeType(ActivityType $type): void
-    {
-        if (!$this->types->contains($type)) {
-            return;
-        }
-        $this->types->removeElement($type);
     }
 
     public function getId(): ?int
@@ -247,50 +169,6 @@ class Activity
     public function setDescription(string $description): void
     {
         $this->description = $description;
-    }
-
-    public function getApplicationDeadline(): ?DateTimeInterface
-    {
-        return $this->applicationDeadline;
-    }
-
-    public function setApplicationDeadline(DateTimeInterface $applicationDeadline): void
-    {
-        $this->applicationDeadline = $applicationDeadline;
-    }
-
-    public function getFinalDeadline(): ?DateTimeInterface
-    {
-        return $this->finalDeadline;
-    }
-
-    public function setFinalDeadline(DateTimeInterface $finalDeadline): void
-    {
-        $this->finalDeadline = $finalDeadline;
-    }
-
-    public function getStatus(): ?int
-    {
-        return $this->status;
-    }
-
-    /**
-     * @return int[]
-     */
-    public static function getAllStatuses(): array
-    {
-        return [
-            self::STATUS_IN_VALIDATION,
-            self::STATUS_NEW,
-            self::STATUS_FINISHED,
-            self::STATUS_CLOSED,
-            self::STATUS_REJECTED
-        ];
-    }
-
-    public function setStatus(int $status): void
-    {
-        $this->status = $status;
     }
 
     public function getOwner(): ?User

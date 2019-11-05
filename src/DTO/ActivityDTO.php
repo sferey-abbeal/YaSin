@@ -3,7 +3,6 @@
 
 namespace App\DTO;
 
-use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use JMS\Serializer\Annotation as Serializer;
@@ -16,12 +15,6 @@ use Swagger\Annotations as SWG;
  */
 class ActivityDTO
 {
-    public const STATUS_IN_VALIDATION = 1;
-    public const STATUS_NEW = 2;
-    public const STATUS_FINISHED = 3;
-    public const STATUS_CLOSED = 4;
-    public const STATUS_REJECTED = 5;
-
     /**
      * @var int
      * @Serializer\Type("int")
@@ -54,45 +47,6 @@ class ActivityDTO
     public $description;
 
     /**
-     * @var DateTime
-     * @Serializer\Type("DateTime<'U'>")
-     * @Assert\GreaterThan("now", groups={"ActivityEdit", "ActivityCreate"})
-     * @Serializer\Expose()
-     * @Groups({"ActivityEdit", "ActivityCreate"})
-     * @SWG\Property(example="15555555599")
-     */
-    public $applicationDeadline;
-
-    /**
-     * @var DateTime
-     * @Serializer\Type("DateTime<'U'>")
-     * @Assert\GreaterThan(propertyPath="applicationDeadline",
-     *     groups={"ActivityEdit", "ActivityCreate"}
-     * )
-     * @Serializer\Expose()
-     * @Groups({"ActivityEdit", "ActivityCreate"})
-     * @SWG\Property(example="15555555599")
-     */
-    public $finalDeadline;
-
-    /**
-     * @var int
-     * @Serializer\Type("integer")
-     * @Assert\Range(
-     *     min = 1,
-     *     max = 4,
-     *     minMessage="Status must be in range 1-4!",
-     *     maxMessage="Status must be in range 1-4!",
-     *     groups={"ActivityEdit"}
-     * )
-     * @Serializer\Expose()
-     * @Groups({"ActivityEdit"})
-     *
-     */
-    public $status = self::STATUS_IN_VALIDATION;
-
-
-    /**
      * @var boolean
      * @Serializer\Type("boolean")
      * @Serializer\Expose()
@@ -109,14 +63,6 @@ class ActivityDTO
     public $technologies;
 
     /**
-     * @var Collection|ActivityTypeDTO[]
-     * @Serializer\Type("ArrayCollection<App\DTO\ActivityTypeDTO>")
-     * @Serializer\Expose()
-     * @Groups({"ActivityEdit", "ActivityCreate"})
-     */
-    public $types;
-
-    /**
      * The cover of Activity encoded in Base64
      * @var string
      * @Serializer\Type("string")
@@ -129,6 +75,5 @@ class ActivityDTO
     public function __construct()
     {
         $this->technologies = new ArrayCollection();
-        $this->types = new ArrayCollection();
     }
 }

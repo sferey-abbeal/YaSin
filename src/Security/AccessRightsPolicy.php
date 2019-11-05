@@ -39,10 +39,6 @@ class AccessRightsPolicy
     {
         $usersAssigned = $this->userRepository->getAssignedUsersForActivity($activity)->getQuery()->getResult();
 
-        if ($activity->getStatus() !== Activity::STATUS_FINISHED) {
-            return false;
-        }
-
         if ($userFrom === $activity->getOwner() && in_array($userTo, $usersAssigned, true)) {
             return true;
         }

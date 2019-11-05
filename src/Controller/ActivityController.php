@@ -23,7 +23,6 @@ use App\Serializer\ValidationErrorSerializer;
 use App\Service\ActivityCoverManager;
 use App\Service\EmailSender;
 use App\Transformer\ActivityTransformer;
-use DateTime;
 use Doctrine\ORM\NonUniqueResultException;
 use JMS\Serializer\DeserializationContext;
 use App\Repository\ActivityRepository;
@@ -213,7 +212,6 @@ class ActivityController extends AbstractController
         ActivityListSort $activityListSort,
         ActivityListPagination $activityListPagination
     ): JsonResponse {
-        $user = $this->getUser();
 
         $filter = $request->query->get('filter');
         $activityListFilter->setFilterFields((array)$filter);
@@ -229,8 +227,7 @@ class ActivityController extends AbstractController
                 ->getActivitiesListPaginated(
                     $activityListPagination,
                     $activityListSort,
-                    $activityListFilter,
-                    $user
+                    $activityListFilter
                 )),
             200,
             [],
@@ -283,18 +280,8 @@ class ActivityController extends AbstractController
     {
         $user = $this->getUser();
         $rights = $this->accessRightsPolicy->canAccessActivity($activity, $user);
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
 
-        if ($activity->getStatus() === Activity::STATUS_IN_VALIDATION &&
-            (!$isAdmin || $user !== $activity->getOwner() || $user !== $activity->getOwner()->getProjectManager())
-        ) {
-            return new JsonResponse([
-                'code' => Response::HTTP_FORBIDDEN,
-                'message' => 'Access denied!'
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        if ($rights === false && (!$isAdmin || $user !== $activity->getOwner()->getProjectManager())) {
+        if ($rights === false ) {
             return new JsonResponse([
                 'code' => Response::HTTP_FORBIDDEN,
                 'message' => 'Access denied!'
@@ -490,10 +477,6 @@ class ActivityController extends AbstractController
         }
 
         $activityRepository->save($newActivity);
-        if ($owner->getProjectManager()) {
-            $subject = ' has created a new activity waiting for your validation ';
-            $this->emailSender->sendEmail($owner, $owner->getProjectManager(), $newActivity, $subject);
-        }
         return new JsonResponse(['message' => 'Activity successfully created!'], Response::HTTP_CREATED);
     }
 
@@ -714,17 +697,6 @@ class ActivityController extends AbstractController
     ): JsonResponse {
         /** @var User $applierUser */
         $applierUser = $this->getUser();
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
-
-        if (!$isAdmin && $activity->isPublic() === false) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_FORBIDDEN,
-                    'message' => 'Access denied'
-                ],
-                Response::HTTP_FORBIDDEN
-            );
-        }
 
         if ($activity->getOwner() === $applierUser) {
             return new JsonResponse(
@@ -733,18 +705,6 @@ class ActivityController extends AbstractController
                     'message' => 'You are the owner of this Job!'
                 ],
                 Response::HTTP_NOT_ACCEPTABLE
-            );
-        }
-
-        if ($activity->getStatus() !== Activity::STATUS_NEW
-            || $activity->getApplicationDeadline() < new DateTime('now')
-        ) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_PRECONDITION_FAILED,
-                    'message' => 'Activity is already finished or application deadline passed!'
-                ],
-                Response::HTTP_PRECONDITION_FAILED
             );
         }
 
@@ -885,18 +845,6 @@ class ActivityController extends AbstractController
                     'message' => 'You are the owner of this Job!'
                 ],
                 Response::HTTP_NOT_ACCEPTABLE
-            );
-        }
-
-        if ($activity->getStatus() !== Activity::STATUS_NEW
-            || $activity->getApplicationDeadline() < new DateTime('now')
-        ) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_PRECONDITION_FAILED,
-                    'message' => 'Activity is already finished or application deadline passed!'
-                ],
-                Response::HTTP_PRECONDITION_FAILED
             );
         }
 
@@ -1474,263 +1422,5 @@ class ActivityController extends AbstractController
             [],
             true
         );
-    }
-
-    /**
-     * Get activities for validation
-     * @Rest\Get("/validation")
-     * @SWG\Get(
-     *     tags={"Activity"},
-     *     summary="Get activities for validation",
-     *     description="Get activities for validation",
-     *     operationId="getActivities",
-     *     produces={"application/json"}
-     * )
-     * @SWG\Response(
-     *     response=200,
-     *     description="Successfull operation!",
-     *     @Model(type=Activity::class, groups={"ActivityList"})
-     * )
-     * @SWG\Response(
-     *     response=401,
-     *     description="Unauthorized.",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=401),
-     *     @SWG\Property(property="message", type="string", example="JWT Token not found"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=403),
-     *     @SWG\Property(property="message", type="string", example="Access denied!"),
-     *     )
-     * )
-     * @param ActivityRepository $activityRepository
-     * @return JsonResponse
-     */
-    public function getActivitiesForValidation(ActivityRepository $activityRepository): JsonResponse
-    {
-        $authenticatedUser = $this->getUser();
-        $isAdmin = $this->isGranted('ROLE_PM');
-        if (!$isAdmin) {
-            return new JsonResponse([
-                'code' => Response::HTTP_FORBIDDEN,
-                'message' => 'Access denied!'
-            ], Response::HTTP_FORBIDDEN);
-        }
-        $listOfActivities = $activityRepository
-            ->getActivitiesForValidation($authenticatedUser)
-            ->getQuery()
-            ->getResult();
-
-        /** @var SerializationContext $context */
-        $context = SerializationContext::create()->setGroups(array('ActivityList'));
-
-        $json = $this->serializer->serialize(
-            $listOfActivities,
-            'json',
-            $context
-        );
-        return new JsonResponse($json, 200, [], true);
-    }
-
-    /**
-     * Validate a Job.
-     * @Rest\Post("/{id}/validate")
-     * @SWG\Post(
-     *     tags={"Activity"},
-     *     summary="Validate a Job.",
-     *     description="Validate a Job.",
-     *     operationId="validateJob",
-     *     produces={"application/json"},
-     *     @SWG\Parameter(
-     *     description="ID of Activity for validation",
-     *     in="path",
-     *     name="id",
-     *     required=true,
-     *     type="integer",
-     * )
-     * )
-     * @SWG\Response(
-     *     response=401,
-     *     description="Unauthorized.",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=401),
-     *     @SWG\Property(property="message", type="string", example="JWT Token not found"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="200",
-     *     description="Successfull operation!",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="message", type="string", example="Job was validated with success!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=403),
-     *     @SWG\Property(property="message", type="string", example="Access denied!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="400",
-     *     description="Bad request.",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=400),
-     *     @SWG\Property(property="message", type="string", example="This Job dont need a validation!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Not found",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=404),
-     *     @SWG\Property(property="message", type="string", example="Not found!"),
-     *     )
-     * )
-     * @param Activity $activity
-     * @param ActivityRepository $activityRepo
-     * @return JsonResponse
-     * @throws LoaderError
-     * @throws ORMException
-     * @throws OptimisticLockException
-     * @throws RuntimeError
-     * @throws SyntaxError
-     */
-    public function validateJob(
-        Activity $activity,
-        ActivityRepository $activityRepo
-    ): JsonResponse {
-        $authenticatedUser = $this->getUser();
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
-
-        if (!$isAdmin && $activity->getOwner()->getProjectManager() !== $authenticatedUser) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_FORBIDDEN,
-                    'message' => 'Access denied'
-                ],
-                Response::HTTP_FORBIDDEN
-            );
-        }
-
-        if ($activity->getStatus() !== Activity::STATUS_IN_VALIDATION) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_BAD_REQUEST,
-                    'message' => 'This Job dont need a validation!'
-                ],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        $subject = ' validated your Job: ';
-        $this->emailSender->sendEmail($authenticatedUser, $activity->getOwner(), $activity, $subject);
-        $activity->setStatus(Activity::STATUS_NEW);
-        $activityRepo->save($activity);
-        return new JsonResponse(['message' => 'Job was validated with success!'], Response::HTTP_OK);
-    }
-
-    /**
-     * Reject a Job.
-     * @Rest\Post("/{id}/reject")
-     * @SWG\Post(
-     *     tags={"Activity"},
-     *     summary="Reject a Job.",
-     *     description="Reject a Job.",
-     *     operationId="rejectJob",
-     *     produces={"application/json"},
-     *     @SWG\Parameter(
-     *     description="ID of Activity to reject",
-     *     in="path",
-     *     name="id",
-     *     required=true,
-     *     type="integer",
-     * )
-     * )
-     * @SWG\Response(
-     *     response=401,
-     *     description="Unauthorized.",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=401),
-     *     @SWG\Property(property="message", type="string", example="JWT Token not found"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="200",
-     *     description="Successfull operation!",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="message", type="string", example="Job was rejected with success!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=403),
-     *     @SWG\Property(property="message", type="string", example="Access denied!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response="400",
-     *     description="Bad request.",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=400),
-     *     @SWG\Property(property="message", type="string", example="This Job dont need a validation!"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Not found",
-     *     @SWG\Schema(
-     *     @SWG\Property(property="code", type="integer", example=404),
-     *     @SWG\Property(property="message", type="string", example="Not found!"),
-     *     )
-     * )
-     * @param Activity $activity
-     * @param ActivityRepository $activityRepo
-     * @return JsonResponse
-     * @throws LoaderError
-     * @throws ORMException
-     * @throws OptimisticLockException
-     * @throws RuntimeError
-     * @throws SyntaxError
-     */
-    public function rejectJob(
-        Activity $activity,
-        ActivityRepository $activityRepo
-    ): JsonResponse {
-        $authenticatedUser = $this->getUser();
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
-
-        if (!$isAdmin && $activity->getOwner()->getProjectManager() !== $authenticatedUser) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_FORBIDDEN,
-                    'message' => 'Access denied'
-                ],
-                Response::HTTP_FORBIDDEN
-            );
-        }
-
-        if ($activity->getStatus() !== Activity::STATUS_IN_VALIDATION) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_BAD_REQUEST,
-                    'message' => 'This Job dont need a validation!'
-                ],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        $subject = ' rejected your Job: ';
-        $this->emailSender->sendEmail($authenticatedUser, $activity->getOwner(), $activity, $subject);
-        $activity->setStatus(Activity::STATUS_REJECTED);
-        $activityRepo->save($activity);
-        return new JsonResponse(['message' => 'Job was rejected with success!'], Response::HTTP_OK);
     }
 }
