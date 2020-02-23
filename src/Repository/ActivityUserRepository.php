@@ -52,7 +52,11 @@ class ActivityUserRepository extends ServiceEntityRepository
         $activityUser = new ActivityUser();
         $activityUser->setActivity($activity);
         $activityUser->setUser($applier);
-        $activityUser->setType(ActivityUser::TYPE_APPLIED);
+        if ($activity->isPublic()) {
+            $activityUser->setType(ActivityUser::TYPE_ASSIGNED);
+        } else {
+            $activityUser->setType(ActivityUser::TYPE_APPLIED);
+        }
         $this->save($activityUser);
     }
 

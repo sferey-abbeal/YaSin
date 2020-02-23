@@ -497,7 +497,6 @@ class UserController extends AbstractController
      * )
      * @param Request $request
      * @param UserListFilter $userListFilter
-     * @param UserListSort $userListSort
      * @param UserListPagination $userListPagination
      * @return JsonResponse
      */
