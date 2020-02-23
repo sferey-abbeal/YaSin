@@ -37,7 +37,7 @@ class UserFixtures extends Fixture
         $user->setLocation($faker->address);
         $user->setName('Staci');
         $user->setSurname('Nicolae');
-        $user->setEmail('nstaci@pentalog.com');
+        $user->setEmail('nstaci@yasin.com');
         $user->setBiography($faker->sentence);
         $user->setStars(0);
         $user->setRoles((array)'ROLE_ADMIN');
@@ -49,7 +49,7 @@ class UserFixtures extends Fixture
         $user->setLocation($faker->address);
         $user->setName('Project');
         $user->setSurname('Manager');
-        $user->setEmail('pm@pentalog.com');
+        $user->setEmail('pm@yasin.com');
         $user->setBiography($faker->sentence);
         $user->setStars(0);
         $user->setRoles((array)'ROLE_USER');
@@ -61,7 +61,7 @@ class UserFixtures extends Fixture
         $user->setLocation($faker->address);
         $user->setName('Druta');
         $user->setSurname('Mihai');
-        $user->setEmail('mdruta@pentalog.com');
+        $user->setEmail('mdruta@yasin.com');
         $user->setBiography($faker->sentence);
         $user->setStars(0);
         $user->setRoles((array)'ROLE_USER');

@@ -33,7 +33,7 @@ class ActivityUser
     private $activity;
 
     /**
-     * @ORM\ManyToOne(targetEntity="User")
+     * @ORM\ManyToOne(targetEntity="User", inversedBy="activityUsers")
      * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $user;

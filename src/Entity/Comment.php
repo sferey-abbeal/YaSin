@@ -27,13 +27,13 @@ class Comment
     private $id;
 
     /**
-     * Activity id.
-     * @ORM\ManyToOne(targetEntity="Activity")
+     * Post id.
+     * @ORM\ManyToOne(targetEntity="Posts")
      * @ORM\JoinColumn(onDelete="CASCADE")
      * @Serializer\Expose()
      * @SWG\Property()
      */
-    private $activity;
+    private $post;
 
     /**
      * User id.
@@ -102,14 +102,14 @@ class Comment
         return $this->id;
     }
 
-    public function getActivity(): ?Activity
+    public function getPost(): ?Posts
     {
-        return $this->activity;
+        return $this->post;
     }
 
-    public function setActivity(?Activity $activity): self
+    public function setPost(?Posts $post): self
     {
-        $this->activity = $activity;
+        $this->post = $post;
 
         return $this;
     }
