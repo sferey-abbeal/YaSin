@@ -82,7 +82,8 @@ class ActivityController extends AbstractController
         ActivityHandler $activityHandler,
         UsersForActivityHandler $usersForActivityHandler,
         EmailSender $emailSender
-    ) {
+    )
+    {
         $this->serializer = $serializer;
         $this->transformer = $transformer;
         $this->validator = $validator;
@@ -210,7 +211,8 @@ class ActivityController extends AbstractController
         ActivityListFilter $activityListFilter,
         ActivityListSort $activityListSort,
         ActivityListPagination $activityListPagination
-    ): JsonResponse {
+    ): JsonResponse
+    {
 
         $filter = $request->query->get('filter');
         $activityListFilter->setFilterFields((array)$filter);
@@ -279,8 +281,8 @@ class ActivityController extends AbstractController
     {
         $user = $this->getUser();
         $rights = $this->accessRightsPolicy->canAccessActivity($activity, $user);
-
-        if ($rights === false ) {
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
+        if ($rights === false && !$isAdmin) {
             return new JsonResponse([
                 'code' => Response::HTTP_FORBIDDEN,
                 'message' => 'Access denied!'
@@ -419,17 +421,15 @@ class ActivityController extends AbstractController
      * @param Request $request
      * @param ValidationErrorSerializer $validationErrorSerializer
      * @return Response
-     * @throws LoaderError
      * @throws ORMException
      * @throws OptimisticLockException
-     * @throws RuntimeError
-     * @throws SyntaxError
      */
     public function createAction(
         ActivityRepository $activityRepository,
         Request $request,
         ValidationErrorSerializer $validationErrorSerializer
-    ): Response {
+    ): Response
+    {
         $owner = $this->getUser();
 
         $data = $request->getContent();
@@ -550,7 +550,8 @@ class ActivityController extends AbstractController
         ActivityRepository $activityRepository,
         Request $request,
         ValidationErrorSerializer $validationErrorSerializer
-    ): Response {
+    ): Response
+    {
         $authenticatedUser = $this->getUser();
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 
@@ -693,7 +694,8 @@ class ActivityController extends AbstractController
     public function applyForActivity(
         Activity $activity,
         ActivityUserRepository $activityUserRepo
-    ): JsonResponse {
+    ): JsonResponse
+    {
         /** @var User $applierUser */
         $applierUser = $this->getUser();
 
@@ -822,7 +824,8 @@ class ActivityController extends AbstractController
         Activity $activity,
         User $invitedUser,
         ActivityUserRepository $activityUserRepo
-    ): JsonResponse {
+    ): JsonResponse
+    {
         /** @var User $authenticatedUser */
         $authenticatedUser = $this->getUser();
         $isAdmin = $this->isGranted('ROLE_ADMIN');
@@ -945,7 +948,8 @@ class ActivityController extends AbstractController
         Activity $activity,
         User $user,
         ActivityUserRepository $activityUserRepo
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $authenticatedUser = $this->getUser();
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 
@@ -1057,7 +1061,8 @@ class ActivityController extends AbstractController
         Activity $activity,
         User $user,
         ActivityUserRepository $activityUserRepo
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $authenticatedUser = $this->getUser();
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 
@@ -1141,7 +1146,8 @@ class ActivityController extends AbstractController
     public function acceptInvitation(
         Activity $activity,
         ActivityUserRepository $activityUserRepo
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $authenticatedUser = $this->getUser();
         $accept = $activityUserRepo->getActivityUser($authenticatedUser, $activity);
 
@@ -1214,7 +1220,8 @@ class ActivityController extends AbstractController
     public function declineInvitation(
         Activity $activity,
         ActivityUserRepository $activityUserRepo
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $authenticatedUser = $this->getUser();
         $accept = $activityUserRepo->getActivityUser($authenticatedUser, $activity);
 
@@ -1294,7 +1301,8 @@ class ActivityController extends AbstractController
         Activity $activity,
         ImageRepository $imageRepository,
         ActivityCoverManager $activityCoverManager
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $authenticatedUser = $this->getUser();
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 
@@ -1398,7 +1406,8 @@ class ActivityController extends AbstractController
         Request $request,
         UserListFilter $userListFilter,
         UserListPagination $userListPagination
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $filter = $request->query->get('filter');
         $userListFilter->setFilterFields((array)$filter);
 

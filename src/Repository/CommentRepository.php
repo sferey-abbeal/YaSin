@@ -2,8 +2,8 @@
 
 namespace App\Repository;
 
-use App\Entity\Activity;
 use App\Entity\Comment;
+use App\Entity\Posts;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -38,13 +38,13 @@ class CommentRepository extends ServiceEntityRepository
         $em->flush();
     }
 
-    public function getCommentsForActivity(Activity $activity): QueryBuilder
+    public function getCommentsForActivity(Posts $posts): QueryBuilder
     {
         $queryBuilder = $this->createQueryBuilder('comment');
         $queryBuilder
             ->select('comment')
-            ->where('comment.activity = :activity')
-            ->setParameter('activity', $activity);
+            ->where('comment.post = :post')
+            ->setParameter('post', $posts);
 
         return $queryBuilder;
     }

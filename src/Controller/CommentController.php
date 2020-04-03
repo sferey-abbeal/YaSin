@@ -3,8 +3,8 @@
 namespace App\Controller;
 
 use App\DTO\CommentDTO;
-use App\Entity\Activity;
 use App\Entity\Comment;
+use App\Entity\Posts;
 use App\Exceptions\EntityNotFound;
 use App\Repository\CommentRepository;
 use App\Security\AccessRightsPolicy;
@@ -17,7 +17,6 @@ use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use FOS\RestBundle\Controller\Annotations as Rest;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -50,7 +49,8 @@ class CommentController extends AbstractController
         CommentTransformer $transformer,
         ValidatorInterface $validator,
         AccessRightsPolicy $accessRightsPolicy
-    ) {
+    )
+    {
         $this->serializer = $serializer;
         $this->transformer = $transformer;
         $this->validator = $validator;
@@ -59,7 +59,7 @@ class CommentController extends AbstractController
 
     /**
      * Add comment for activity.
-     * @Rest\Post("/activities/{id}/add_comment", requirements={"id"="\d+"})
+     * @Rest\Post("/post/{id}/add_comment", requirements={"id"="\d+"})
      * @SWG\Post(
      *     tags={"Comment"},
      *     summary="Add comment.",
@@ -120,7 +120,7 @@ class CommentController extends AbstractController
      *     @SWG\Property(property="message", type="string", example="Not found!"),
      *     )
      * )
-     * @param Activity $activity
+     * @param Posts $posts
      * @param Request $request
      * @param CommentRepository $commentRepository
      * @param ValidationErrorSerializer $validationErrorSerializer
@@ -129,21 +129,13 @@ class CommentController extends AbstractController
      * @throws OptimisticLockException
      */
     public function addComment(
-        Activity $activity,
+        Posts $posts,
         Request $request,
         CommentRepository $commentRepository,
         ValidationErrorSerializer $validationErrorSerializer
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $authenticatedUser = $this->getUser();
-        $rights = $this->accessRightsPolicy->canAccessActivity($activity, $authenticatedUser);
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
-
-        if ($rights === false && !$isAdmin) {
-            return new JsonResponse([
-                'code' => Response::HTTP_FORBIDDEN,
-                'message' => 'Access denied!'
-            ], Response::HTTP_FORBIDDEN);
-        }
 
         $data = $request->getContent();
 
@@ -157,7 +149,6 @@ class CommentController extends AbstractController
             $context
         );
         $errors = $this->validator->validate($commentDTO, null, ['AddComment']);
-
         if (count($errors) > 0) {
             return new JsonResponse(
                 [
@@ -169,7 +160,7 @@ class CommentController extends AbstractController
             );
         }
         try {
-            $addComment = $this->transformer->addComment($commentDTO, $activity, $authenticatedUser);
+            $addComment = $this->transformer->addComment($commentDTO, $posts, $authenticatedUser);
         } catch (EntityNotFound $exception) {
             return new JsonResponse(
                 [
@@ -187,10 +178,7 @@ class CommentController extends AbstractController
 
     /**
      * Edit comment.
-     * @Rest\Post("/activities/{activityId}/edit_comment/{commentId}",
-     *     requirements={"activityId"="\d+", "commentId"="\d+"})
-     * @ParamConverter("activity", options={"mapping": {"activityId" : "id"}})
-     * @ParamConverter("comment", options={"mapping": {"commentId" : "id"}})
+     * @Rest\Post("edit_comment/{id}", requirements={"id"="\d+"})
      * @SWG\Post(
      *     tags={"Comment"},
      *     summary="Edit comment.",
@@ -198,16 +186,9 @@ class CommentController extends AbstractController
      *     operationId="editComment",
      *     produces={"application/json"},
      *     @SWG\Parameter(
-     *     description="ID of Activity",
-     *     in="path",
-     *     name="activityId",
-     *     required=true,
-     *     type="integer",
-     * ),
-     *     @SWG\Parameter(
      *     description="ID of Comment to be edited",
      *     in="path",
-     *     name="commentId",
+     *     name="id",
      *     required=true,
      *     type="integer",
      * ),
@@ -271,7 +252,8 @@ class CommentController extends AbstractController
         CommentRepository $commentRepository,
         Comment $comment,
         ValidationErrorSerializer $validationErrorSerializer
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $authenticatedUser = $this->getUser();
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 
@@ -315,7 +297,7 @@ class CommentController extends AbstractController
 
     /**
      * Get comments for activity.
-     * @Rest\Get("/activities/{id}/comments", requirements={"id"="\d+"})
+     * @Rest\Get("/post/{id}/comments", requirements={"id"="\d+"})
      * @SWG\Get(
      *     tags={"Comment"},
      *     summary="Get comments for activity.",
@@ -352,22 +334,13 @@ class CommentController extends AbstractController
      *     )
      * )
      * @param CommentRepository $commentRepository
-     * @param Activity $activity
+     * @param Posts $posts
      * @return JsonResponse
      */
-    public function getCommentsForActivity(CommentRepository $commentRepository, Activity $activity): JsonResponse
+    public function getCommentsForActivity(CommentRepository $commentRepository, Posts $posts): JsonResponse
     {
-        $authenticatedUser = $this->getUser();
-        $rights = $this->accessRightsPolicy->canAccessActivity($activity, $authenticatedUser);
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
-        if ($rights === false && !$isAdmin) {
-            return new JsonResponse([
-                'code' => Response::HTTP_FORBIDDEN,
-                'message' => 'Access denied!'
-            ], Response::HTTP_FORBIDDEN);
-        }
+        $comments = $commentRepository->getCommentsForActivity($posts)->getQuery()->getResult();
 
-        $comments = $commentRepository->getCommentsForActivity($activity)->getQuery()->getResult();
         /** @var SerializationContext $context */
         $context = SerializationContext::create()
             ->enableMaxDepthChecks()
@@ -439,7 +412,8 @@ class CommentController extends AbstractController
     public function deleteComment(
         Comment $comment,
         CommentRepository $commentRepository
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $authenticatedUser = $this->getUser();
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 

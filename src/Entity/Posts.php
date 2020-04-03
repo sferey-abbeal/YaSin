@@ -2,8 +2,6 @@
 
 namespace App\Entity;
 
-use DateTime;
-use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation\Groups;
 use JMS\Serializer\Annotation as Serializer;
@@ -58,22 +56,6 @@ class Posts
      */
     private $activity;
 
-    /**
-     * @ORM\Column(type="integer", length=255, nullable=true)
-     * @Serializer\Expose()
-     * @Groups({"Posts"})
-     * @SWG\Property()
-     */
-    private $likes;
-
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     * @Serializer\Expose()
-     * @Groups({"Posts"})
-     * @SWG\Property()
-     */
-    private $dislikes;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -123,30 +105,6 @@ class Posts
     public function setActivity(?Activity $activity): self
     {
         $this->activity = $activity;
-
-        return $this;
-    }
-
-    public function getLikes(): ?string
-    {
-        return $this->likes;
-    }
-
-    public function setLikes(?string $likes): self
-    {
-        $this->likes = $likes;
-
-        return $this;
-    }
-
-    public function getDislikes(): ?int
-    {
-        return $this->dislikes;
-    }
-
-    public function setDislikes(?int $dislikes): self
-    {
-        $this->dislikes = $dislikes;
 
         return $this;
     }

@@ -3,8 +3,8 @@
 namespace App\Transformer;
 
 use App\DTO\CommentDTO;
-use App\Entity\Activity;
 use App\Entity\Comment;
+use App\Entity\Posts;
 use App\Entity\User;
 use App\Exceptions\EntityNotFound;
 use App\Repository\CommentRepository;
@@ -23,15 +23,15 @@ class CommentTransformer
 
     /**
      * @param CommentDTO $commentDTO
-     * @param Activity $activity
+     * @param Posts $posts
      * @param User $user
      * @return Comment
      * @throws EntityNotFound
      */
-    public function addComment(CommentDTO $commentDTO, Activity $activity, User $user): Comment
+    public function addComment(CommentDTO $commentDTO, Posts $posts, User $user): Comment
     {
         $entity = new Comment();
-        $entity->setActivity($activity);
+        $entity->setPost($posts);
         $entity->setUser($user);
         $entity->setComment($commentDTO->comment);
         if ($commentDTO->parent) {
