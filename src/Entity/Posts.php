@@ -18,7 +18,7 @@ class Posts
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
      * @Serializer\Expose()
-     * @Groups({"Posts"})
+     * @Groups({"Posts", "getPosts"})
      * @SWG\Property()
      */
     private $id;
@@ -26,7 +26,7 @@ class Posts
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      * @Serializer\Expose()
-     * @Groups({"Posts"})
+     * @Groups({"Posts", "getPosts"})
      * @SWG\Property()
      */
     private $text;
@@ -34,7 +34,7 @@ class Posts
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      * @Serializer\Expose()
-     * @Groups({"Posts"})
+     * @Groups({"Posts", "getPosts"})
      * @SWG\Property()
      */
     private $image;
@@ -42,7 +42,7 @@ class Posts
     /**
      * @ORM\ManyToOne(targetEntity="User", fetch="EAGER")
      * @Serializer\Expose()
-     * @Groups({"Posts"})
+     * @Groups({"Posts", "getPosts"})
      * @SWG\Property()
      */
     private $owner;

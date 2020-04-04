@@ -296,7 +296,7 @@ class CommentController extends AbstractController
     }
 
     /**
-     * Get comments for activity.
+     * Get comments for post.
      * @Rest\Get("/post/{id}/comments", requirements={"id"="\d+"})
      * @SWG\Get(
      *     tags={"Comment"},

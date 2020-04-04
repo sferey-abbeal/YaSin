@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\DTO\PostsDTO;
 use App\Entity\Activity;
-use App\Entity\Like;
+use App\Entity\PostsLikes;
 use App\Entity\Posts;
 use App\Repository\LikeRepository;
 use App\Repository\PostsRepository;
@@ -14,6 +14,7 @@ use App\Transformer\PostTransformer;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use JMS\Serializer\DeserializationContext;
+use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -124,16 +125,39 @@ class PostsController extends AbstractController
      */
     public function addLike(Posts $posts, LikeRepository $likeRepository): JsonResponse
     {
+
         $authenticatedUser = $this->getUser();
         $like_exist = $likeRepository->findLike($posts, $authenticatedUser);
         if ($like_exist) {
             $likeRepository->delete($like_exist);
             return new JsonResponse(['message' => 'Your like has successfully deleted!'], Response::HTTP_OK);
         }
-        $like = New Like();
+        $like = New PostsLikes();
         $like->setPost($posts);
         $like->setUser($authenticatedUser);
         $likeRepository->save($like);
         return new JsonResponse(['message' => 'Your like has successfully added!'], Response::HTTP_OK);
+    }
+
+    /**
+     * @Rest\Get("/activities/{id}/posts", requirements={"id"="\d+"})
+     * @param Activity $activity
+     * @param PostsRepository $postsRepository
+     * @return JsonResponse
+     */
+    public function getActivityPosts(Activity $activity, PostsRepository $postsRepository): JsonResponse
+    {
+        $posts = $postsRepository->getPostsForActivity($activity)->getQuery()->getResult();
+
+        /** @var SerializationContext $context */
+        $context = SerializationContext::create()->setGroups(array('getPosts'));
+
+        $json = $this->serializer->serialize(
+            $posts,
+            'json',
+            $context
+        );
+
+        return new JsonResponse($json, 200, [], true);
     }
 }

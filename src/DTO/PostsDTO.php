@@ -29,14 +29,14 @@ class PostsDTO
      *     message = "Comment cannot be blank!",
      *     groups={"Posts"}
      * )
-     * @Groups({"Posts"})
+     * @Groups({"Posts", "getPosts"})
      */
     public $text;
 
     /**
      * @Serializer\Type("string")
      * @Serializer\Expose()
-     * @Groups({"Posts"})
+     * @Groups({"Posts", "getPosts"})
      * @SWG\Property()
      */
     public $image;

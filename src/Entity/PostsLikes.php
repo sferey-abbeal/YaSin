@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repository\LikeRepository")
  */
-class Like
+class PostsLikes
 {
     /**
      * @ORM\Id()
@@ -17,7 +17,7 @@ class Like
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Activity", fetch="EAGER")
+     * @ORM\ManyToOne(targetEntity="Posts", fetch="EAGER")
      * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $post;

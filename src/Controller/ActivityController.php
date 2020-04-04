@@ -711,14 +711,11 @@ class ActivityController extends AbstractController
 
         $activityUser = $activityUserRepo->getActivityUser($applierUser, $activity);
 
-        if ($activityUser !== null) {
-            return new JsonResponse(
-                [
-                    'code' => Response::HTTP_BAD_REQUEST,
-                    'message' => 'You cannot apply!'
-                ],
-                Response::HTTP_BAD_REQUEST
-            );
+        if ($activityUser !== null &&
+            ($activityUser->getType() === ActivityUser::TYPE_ASSIGNED ||
+                $activityUser->getType() === ActivityUser::TYPE_APPLIED)) {
+            $activityUserRepo->delete($activityUser);
+            return new JsonResponse(['message' => 'Unapply with success!'], Response::HTTP_OK);
         }
         $subject = ' applied your job: ';
         $this->emailSender->sendEmail($applierUser, $activity->getOwner(), $activity, $subject);

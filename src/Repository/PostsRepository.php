@@ -2,10 +2,12 @@
 
 namespace App\Repository;
 
+use App\Entity\Activity;
 use App\Entity\Posts;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
+use Doctrine\ORM\QueryBuilder;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 
 /**
@@ -32,4 +34,16 @@ class PostsRepository extends ServiceEntityRepository
         $em->persist($posts);
         $em->flush();
     }
+
+    public function getPostsForActivity(Activity $activity): QueryBuilder
+    {
+        $queryBuilder = $this->createQueryBuilder('posts');
+        $queryBuilder
+            ->select('posts')
+            ->where('posts.activity = :activity')
+            ->setParameter('activity', $activity);
+
+        return $queryBuilder;
+    }
+
 }

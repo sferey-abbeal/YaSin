@@ -40,6 +40,18 @@ class ActivityUserRepository extends ServiceEntityRepository
     }
 
     /**
+     * @param ActivityUser $activityUser
+     * @return void
+     * @throws ORMException
+     * @throws OptimisticLockException
+     */
+    public function delete(ActivityUser $activityUser): void
+    {
+        $em = $this->getEntityManager();
+        $em->remove($activityUser);
+        $em->flush();
+    }
+    /**
      * Persist an Activity appliance.
      * @param Activity $activity
      * @param User $applier
