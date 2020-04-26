@@ -24,7 +24,7 @@ class Posts
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      * @Serializer\Expose()
      * @Groups({"Posts", "getPosts"})
      * @SWG\Property()
@@ -51,7 +51,7 @@ class Posts
      * @ORM\ManyToOne(targetEntity="Activity", fetch="EAGER")
      * @ORM\JoinColumn(onDelete="CASCADE")
      * @Serializer\Expose()
-     * @Groups({"Posts"})
+     * @Groups({"Posts", "getPosts"})
      * @SWG\Property()
      */
     private $activity;

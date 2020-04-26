@@ -160,4 +160,26 @@ class PostsController extends AbstractController
 
         return new JsonResponse($json, 200, [], true);
     }
+
+    /**
+     * @Rest\Get("/posts")
+     * @param PostsRepository $postsRepository
+     * @return JsonResponse
+     */
+    public function getUserPosts(PostsRepository $postsRepository): JsonResponse
+    {
+        $authenticatedUser = $this->getUser();
+        $posts = $postsRepository->getPostsForUser($authenticatedUser)->getQuery()->getResult();
+        /** @var SerializationContext $context */
+        $context = SerializationContext::create()->setGroups(array('getPosts'));
+
+        $json = $this->serializer->serialize(
+            $posts,
+            'json',
+            $context
+        );
+
+        return new JsonResponse($json, 200, [], true);
+    }
+
 }

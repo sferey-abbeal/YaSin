@@ -3,7 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Activity;
+use App\Entity\ActivityUser;
 use App\Entity\Posts;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
@@ -46,4 +48,21 @@ class PostsRepository extends ServiceEntityRepository
         return $queryBuilder;
     }
 
+    public function getPostsForUser(User $user): QueryBuilder
+    {
+        $queryBuilder = $this->createQueryBuilder('posts');
+        $queryBuilder
+            ->select('posts')
+            ->join('posts.activity', 'activity')
+            ->leftJoin('activity.activityUsers', 'activity_user')
+            ->where(
+                $queryBuilder->expr()->andX(
+                    'activity_user.user = :user',
+                    'activity_user.type = :type'
+                )
+            )
+            ->setParameter('user', $user)
+            ->setParameter('type', ActivityUser::TYPE_ASSIGNED);
+        return $queryBuilder;
+    }
 }
